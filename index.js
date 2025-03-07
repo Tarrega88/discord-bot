@@ -1,73 +1,88 @@
-const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
+const { Client, GatewayIntentBits, Events, MessageType } = require('discord.js');
 require('dotenv').config();
-
-const TOKEN = process.env.DISCORD_TOKEN;
-const RESTRICTED_USERS = ["1347655991319068693", "196127088435003392"]; // Replace with actual user IDs
-
-let isBotActive = true; // Default: Moderation is ON
-
-const TIMEOUTS = {
-    1: 0, // First offense - warning only
-    2: 5 * 60 * 1000, // 10 minutes
-    3: 15 * 60 * 1000 // 30 minutes
-};
-
-const userOffenses = new Map(); // Store user offenses
+const token = process.env.TOKEN;
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers // Required for timeouts
-    ],
+        GatewayIntentBits.GuildMembers
+    ]
 });
 
-client.on('ready', () => {
+// ✅ Bot Toggle (Admin Control)
+let botEnabled = true;
+
+// ❌ Users Restricted from Manual Mentions
+const restrictedUserIDs = ["1347655991319068693", "196127088435003392"]; // Replace with actual user IDs
+
+// ⏳ Offense Tracking for Timeouts
+const offenseTracker = new Map(); // { userID: count }
+
+// 📌 Admin Message Command to Toggle Bot
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return; // Ignore bot messages
+
+    // ✅ Allow Admins to Toggle Bot
+    if (message.content.toLowerCase() === "bot toggle" && message.member.permissions.has("ADMINISTRATOR")) {
+        botEnabled = !botEnabled;
+        return message.channel.send(`Bot is now **${botEnabled ? "enabled" : "disabled"}**.`);
+    }
+
+    // ❌ If Bot is Disabled, Ignore Everything Else
+    if (!botEnabled) return;
+
+    // ✅ Allow Replies (But Still Detect Mentions)
+    if (message.type === MessageType.Reply) return;
+
+    // ❌ Detect and Block Manual @Mentions
+    const mentionedUsers = message.mentions.users;
+    for (const user of mentionedUsers.values()) {
+        if (restrictedUserIDs.includes(user.id)) {
+            await message.delete();
+            await message.channel.send(`${message.author}, manual mentions are not allowed.`);
+
+            // ⏳ Track Offenses for Timeouts
+            const userID = message.author.id;
+            const offenses = (offenseTracker.get(userID) || 0) + 1;
+            offenseTracker.set(userID, offenses);
+
+            if (offenses === 1) {
+                return message.channel.send(`${message.author}, this is a **warning**. Repeated @s will result in a timeout.`);
+            } else if (offenses === 2) {
+                await timeoutUser(message, 2); // Timeout for 2 minutes
+            } else if (offenses === 3) {
+                await timeoutUser(message, 5) //Timeout for 5 minutes
+            }
+            else if (offenses >= 4) {
+                await timeoutUser(message, 15); // Timeout for 15 minutes
+            }
+
+            return;
+        }
+    }
+});
+
+// ⏳ Function to Timeout Users
+async function timeoutUser(message, minutes) {
+    const member = await message.guild.members.fetch(message.author.id);
+    if (!member) return;
+
+    const duration = minutes * 60 * 1000; // Convert minutes to milliseconds
+    try {
+        await member.timeout(duration, `Repeated @mention violations.`);
+        message.channel.send(`${message.author} has been **timed out for ${minutes} minutes**.`);
+    } catch (error) {
+        console.error("Failed to timeout user:", error);
+        message.channel.send(`Could not timeout ${message.author}. Missing permissions?`);
+    }
+}
+
+// ✅ Bot Ready Message
+client.once(Events.ClientReady, () => {
     console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on('messageCreate', async (message) => {
-    if (message.author.bot) return; // Ignore bot messages
-
-    // ✅ ADMIN TOGGLE FEATURE
-    if (message.content.trim().toLowerCase() === "bot toggle") {
-        if (message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            isBotActive = !isBotActive;
-            await message.channel.send(`Bot moderation is now **${isBotActive ? "ON" : "OFF"}**.`);
-        } else {
-            await message.channel.send("You do not have permission to toggle the bot.");
-        }
-        return;
-    }
-
-    // ✅ STOP MODERATING IF BOT IS TOGGLED OFF
-    if (!isBotActive) return;
-
-    // ✅ DELETE MESSAGES & APPLY TIMEOUTS IF BOT IS ACTIVE
-    const mentionedUsers = message.mentions.users.map(user => user.id);
-    if (RESTRICTED_USERS.some(id => mentionedUsers.includes(id))) {
-        await message.delete(); // Delete the message
-
-        const userId = message.author.id;
-        let offenses = userOffenses.get(userId) || 0;
-        offenses += 1;
-        userOffenses.set(userId, offenses);
-
-        console.log(`User ${message.author.tag} has ${offenses} offenses.`); // Debug log
-
-        if (offenses === 1) {
-            await message.channel.send(`${message.author}, warning: You cannot mention that user. Further attempts will result in a timeout.`);
-        } else {
-            const timeoutDuration = TIMEOUTS[offenses] || TIMEOUTS[3];
-            try {
-                await message.member.timeout(timeoutDuration, `Mentioned a restricted user (Offense ${offenses})`);
-                await message.channel.send(`${message.author}, you have been timed out for ${timeoutDuration / (60 * 1000)} minutes.`);
-            } catch (err) {
-                console.error("Failed to timeout user:", err);
-            }
-        }
-    }
-});
-
-client.login(TOKEN);
+// 🚀 Login the Bot
+client.login(token);
