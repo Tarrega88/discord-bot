@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js')
 require('dotenv').config();
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const RESTRICTED_USERS = ['1347655991319068693']; // Replace with actual user IDs
+const RESTRICTED_USERS = ["1347655991319068693", "196127088435003392"]; // Replace with actual user IDs
 
 let isBotActive = true; // Default: Moderation is ON
 
