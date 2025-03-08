@@ -20,6 +20,17 @@ const restrictedUserIDs = ["1347655991319068693", "196127088435003392"]; // Repl
 // ⏳ Offense Tracking for Timeouts
 const offenseTracker = new Map(); // { userID: count }
 
+// 🔒 Allowed Server List (For Private Bots)
+const allowedServers = ["1322821692938125412", "1347660414900637696"]; // Replace with actual server IDs
+
+// 🚨 Prevent Unauthorized Server Access
+client.on(Events.GuildCreate, (guild) => {
+    if (!allowedServers.includes(guild.id)) {
+        console.log(`Leaving unauthorized server: ${guild.name}`);
+        guild.leave(); // Auto-leave unauthorized servers
+    }
+});
+
 // 📌 Admin Message Command to Toggle Bot
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot) return; // Ignore bot messages
@@ -53,9 +64,8 @@ client.on(Events.MessageCreate, async (message) => {
             } else if (offenses === 2) {
                 await timeoutUser(message, 2); // Timeout for 2 minutes
             } else if (offenses === 3) {
-                await timeoutUser(message, 5) //Timeout for 5 minutes
-            }
-            else if (offenses >= 4) {
+                await timeoutUser(message, 5); // Timeout for 5 minutes
+            } else if (offenses >= 4) {
                 await timeoutUser(message, 15); // Timeout for 15 minutes
             }
 
