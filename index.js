@@ -46,6 +46,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     // ✅ Allow Replies (But Still Detect Mentions)
     if (message.type === MessageType.Reply) return;
+    if (message.member.permissions.has("ADMINISTRATOR")) return;
 
     // ❌ Detect and Block Manual @Mentions
     const mentionedUsers = message.mentions.users;
