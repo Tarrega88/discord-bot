@@ -39,13 +39,13 @@ client.on(Events.MessageCreate, async (message) => {
 
 
     // ✅ Allow Admins to Toggle Bot
-    if (message.content.toLowerCase() === "bot toggle" && isAdmin) {
+    if (isAdmin && message.content.toLowerCase() === "bot toggle") {
         botEnabled = !botEnabled;
         await new Promise(resolve => setTimeout(resolve, 100));
         return message.channel.send(`Bot is now **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
-    if (message.content.toLowerCase() === "bot status" && isAdmin) {
+    if (isAdmin && message.content.toLowerCase() === "bot status") {
         await new Promise(resolve => setTimeout(resolve, 100));
         return message.channel.send(`Bot status: **${botEnabled ? "enabled" : "disabled"}**.`);
     }
