@@ -31,11 +31,21 @@ client.on(Events.GuildCreate, (guild) => {
     }
 });
 
+const admins = {
+    TT: "196127088435003392",
+    Bot: "1347655991319068693",
+    Framecycler: "950788229249007676",
+    Idrethil: "160547693888929794",
+    tumi: "308259834657243139",
+    Xayah: "232602606848049153",
+    Laughing: "328042897976983552",
+    Tarrega: "423124998094454784",
+}
+const whiteList = Object.values(admins);
+
 // 📌 Admin Message Command to Toggle Bot
 client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot) return; // Ignore bot messages
-
-    const isAdmin = message.member.roles.cache.some(role => role.name === "Admin") || message.member?.permissions.has("ADMINISTRATOR");
+    const isAdmin = whiteList.includes(message.author.id);
 
 
     // ✅ Allow Admins to Toggle Bot
