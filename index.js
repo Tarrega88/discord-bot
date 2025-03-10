@@ -49,6 +49,10 @@ client.on(Events.MessageCreate, async (message) => {
     if (!botEnabled) return;
 
     if (message.member.permissions.has("ADMINISTRATOR") || message.member.permissions.has("Administrator")) return;
+    if (message.member.roles.cache.some(role => role.name === "Admin")) {
+        return;
+    }
+
 
     // ✅ Allow Replies (But Still Detect Mentions)
     if (message.type === MessageType.Reply) return;
