@@ -41,12 +41,17 @@ client.on(Events.MessageCreate, async (message) => {
         return message.channel.send(`Bot is now **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
+    if (message.content.toLowerCase() === "bot status" && message.member.permissions.has("ADMINISTRATOR")) {
+        return message.channel.send(`Bot status: **${botEnabled ? "enabled" : "disabled"}**.`);
+    }
+
     // ❌ If Bot is Disabled, Ignore Everything Else
     if (!botEnabled) return;
 
+    if (message.member.permissions.has("ADMINISTRATOR") || message.member.permissions.has("Administrator")) return;
+
     // ✅ Allow Replies (But Still Detect Mentions)
     if (message.type === MessageType.Reply) return;
-    if (message.member.permissions.has("ADMINISTRATOR")) return;
 
     // ❌ Detect and Block Manual @Mentions
     const mentionedUsers = message.mentions.users;
