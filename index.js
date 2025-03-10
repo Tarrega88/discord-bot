@@ -35,24 +35,23 @@ client.on(Events.GuildCreate, (guild) => {
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot) return; // Ignore bot messages
 
+    const isAdmin = message.member.roles.cache.some(role => role.name === "Admin") || message.member?.permissions.has("ADMINISTRATOR");
+
+
     // ✅ Allow Admins to Toggle Bot
-    if (message.content.toLowerCase() === "bot toggle" && message.member.permissions.has("ADMINISTRATOR")) {
+    if (message.content.toLowerCase() === "bot toggle" && isAdmin) {
         botEnabled = !botEnabled;
         return message.channel.send(`Bot is now **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
-    if (message.content.toLowerCase() === "bot status" && message.member.permissions.has("ADMINISTRATOR")) {
+    if (message.content.toLowerCase() === "bot status" && isAdmin) {
         return message.channel.send(`Bot status: **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
     // ❌ If Bot is Disabled, Ignore Everything Else
+    if (isAdmin) return;
     if (!botEnabled) return;
 
-    // if (message.member.permissions.has("ADMINISTRATOR") || message.member.permissions.has("Administrator")) return;
-    // if (message.member.roles.cache.some(role => role.name === "Admin")) {
-    //     return;
-    // }
-    if (message.member?.permissions.has("ADMINISTRATOR")) return;
 
 
     // ✅ Allow Replies (But Still Detect Mentions)
