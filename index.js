@@ -46,8 +46,6 @@ const whiteList = Object.values(admins);
 // 📌 Admin Message Command to Toggle Bot
 client.on(Events.MessageCreate, async (message) => {
     const isAdmin = whiteList.includes(message.author.id);
-
-
     // ✅ Allow Admins to Toggle Bot
     if (isAdmin && message.content.toLowerCase() === "bot toggle") {
         botEnabled = !botEnabled;
@@ -61,7 +59,7 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     // ❌ If Bot is Disabled, Ignore Everything Else
-    if (message.type === MessageType.Reply || isAdmin || !botEnabled) return;
+    if (!botEnabled || message.type === MessageType.Reply || isAdmin) return;
 
 
     // ❌ Detect and Block Manual @Mentions
