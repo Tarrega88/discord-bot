@@ -41,21 +41,18 @@ client.on(Events.MessageCreate, async (message) => {
     // ✅ Allow Admins to Toggle Bot
     if (message.content.toLowerCase() === "bot toggle" && isAdmin) {
         botEnabled = !botEnabled;
+        await new Promise(resolve => setTimeout(resolve, 100));
         return message.channel.send(`Bot is now **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
     if (message.content.toLowerCase() === "bot status" && isAdmin) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         return message.channel.send(`Bot status: **${botEnabled ? "enabled" : "disabled"}**.`);
     }
 
     // ❌ If Bot is Disabled, Ignore Everything Else
-    if (isAdmin) return;
-    if (!botEnabled) return;
+    if (message.type === MessageType.Reply || isAdmin || !botEnabled) return;
 
-
-
-    // ✅ Allow Replies (But Still Detect Mentions)
-    if (message.type === MessageType.Reply) return;
 
     // ❌ Detect and Block Manual @Mentions
     const mentionedUsers = message.mentions.users;
