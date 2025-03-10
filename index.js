@@ -52,6 +52,7 @@ client.on(Events.MessageCreate, async (message) => {
     // if (message.member.roles.cache.some(role => role.name === "Admin")) {
     //     return;
     // }
+    if (message.member?.permissions.has("ADMINISTRATOR")) return;
 
 
     // ✅ Allow Replies (But Still Detect Mentions)
